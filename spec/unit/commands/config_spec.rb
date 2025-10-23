@@ -21,89 +21,152 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
   end
 
   describe '#setup' do
-    it 'prompts for project name, credentials, and saves config' do
-      command = described_class.new
-      allow(command).to receive(:options).and_return({})
+    context 'interactive mode' do
+      before do
+        # Clear environment variables
+        ENV.delete('LANGFUSE_PROJECT_NAME')
+        ENV.delete('LANGFUSE_PUBLIC_KEY')
+        ENV.delete('LANGFUSE_SECRET_KEY')
+        ENV.delete('LANGFUSE_HOST')
+        ENV.delete('LANGFUSE_PROFILE')
+      end
 
-      # Mock prompts
-      expect(prompt).to receive(:ask)
-        .with('Enter your Langfuse project name:', required: true)
-        .and_return('my-project')
+      it 'prompts for project name, credentials, and saves config' do
+        command = described_class.new
+        allow(command).to receive(:options).and_return({})
 
-      expect(prompt).to receive(:say)
-        .with(/Opening browser/)
+        # Mock prompts
+        expect(prompt).to receive(:ask)
+          .with('Enter your Langfuse project name:', required: false)
+          .and_return('my-project')
 
-      expect(prompt).to receive(:say)
-        .with(/Or visit manually/)
+        expect(prompt).to receive(:say)
+          .with(/Visit:.*my-project/)
 
-      expect(command).to receive(:open_browser)
-        .with('https://cloud.langfuse.com/project/my-project/settings')
+        expect(prompt).to receive(:say)
+          .with(/to get your API keys/)
 
-      expect(prompt).to receive(:ask)
-        .with('Enter your Langfuse public key:', required: true)
-        .and_return('pk_test')
+        expect(prompt).to receive(:ask)
+          .with('Enter your Langfuse public key:', required: true)
+          .and_return('pk_test')
 
-      expect(prompt).to receive(:mask)
-        .with('Enter your Langfuse secret key:', required: true)
-        .and_return('sk_test')
+        expect(prompt).to receive(:mask)
+          .with('Enter your Langfuse secret key:', required: true)
+          .and_return('sk_test')
 
-      expect(prompt).to receive(:ask)
-        .with('Enter host:', default: 'https://cloud.langfuse.com')
-        .and_return('https://cloud.langfuse.com')
+        expect(prompt).to receive(:ask)
+          .with('Enter host:', default: 'https://cloud.langfuse.com')
+          .and_return('https://cloud.langfuse.com')
 
-      expect(prompt).to receive(:ask)
-        .with('Save as profile name:', default: 'default')
-        .and_return('default')
+        expect(prompt).to receive(:ask)
+          .with('Save as profile name:', default: 'default')
+          .and_return('default')
 
-      # Mock connection test
-      expect(client).to receive(:list_traces).with(limit: 1).and_return([])
+        # Mock connection test
+        expect(client).to receive(:list_traces).with(limit: 1).and_return([])
 
-      expect(prompt).to receive(:ok).with('Testing connection... Success!')
-      expect(prompt).to receive(:ok).with(/Configuration saved/)
+        expect(prompt).to receive(:ok).with('Testing connection... Success!')
+        expect(prompt).to receive(:ok).with(/Configuration saved/)
 
-      # Mock config save
-      mock_config = instance_double(Langfuse::CLI::Config)
-      allow(Langfuse::CLI::Config).to receive(:new).and_return(mock_config)
-      expect(mock_config).to receive(:save).with('default').and_return(true)
+        # Mock config save
+        mock_config = instance_double(Langfuse::CLI::Config)
+        allow(Langfuse::CLI::Config).to receive(:new).and_return(mock_config)
+        expect(mock_config).to receive(:save).with('default').and_return(true)
 
-      expect { command.setup }.to output.to_stdout
+        expect { command.setup }.to output.to_stdout
+      end
+
+      it 'handles connection test failures gracefully' do
+        command = described_class.new
+        allow(command).to receive(:options).and_return({})
+        allow(command).to receive(:exit) # Stub exit to prevent test from exiting
+
+        expect(prompt).to receive(:ask)
+          .with('Enter your Langfuse project name:', required: false)
+          .and_return('my-project')
+
+        expect(prompt).to receive(:say).twice
+
+        expect(prompt).to receive(:ask)
+          .with('Enter your Langfuse public key:', required: true)
+          .and_return('pk_test')
+
+        expect(prompt).to receive(:mask)
+          .with('Enter your Langfuse secret key:', required: true)
+          .and_return('sk_test')
+
+        expect(prompt).to receive(:ask)
+          .with('Enter host:', default: 'https://cloud.langfuse.com')
+          .and_return('https://cloud.langfuse.com')
+
+        expect(prompt).to receive(:ask)
+          .with('Save as profile name:', default: 'default')
+          .and_return('default')
+
+        expect(client).to receive(:list_traces)
+          .and_raise(Langfuse::CLI::Client::AuthenticationError, 'Invalid credentials')
+
+        expect(prompt).to receive(:error).with(/Connection test failed/)
+        expect(prompt).to receive(:error).with(/Please check your credentials/)
+
+        expect { command.setup }.to output.to_stdout
+      end
     end
 
-    it 'handles connection test failures gracefully' do
-      command = described_class.new
-      allow(command).to receive(:options).and_return({})
-      allow(command).to receive(:exit) # Stub exit to prevent test from exiting
+    context 'non-interactive mode with environment variables' do
+      before do
+        ENV['LANGFUSE_PUBLIC_KEY'] = 'pk_test_env'
+        ENV['LANGFUSE_SECRET_KEY'] = 'sk_test_env'
+        ENV['LANGFUSE_HOST'] = 'https://env.langfuse.com'
+        ENV['LANGFUSE_PROFILE'] = 'test-profile'
+      end
 
-      expect(prompt).to receive(:ask)
-        .with('Enter your Langfuse project name:', required: true)
-        .and_return('my-project')
+      after do
+        ENV.delete('LANGFUSE_PROJECT_NAME')
+        ENV.delete('LANGFUSE_PUBLIC_KEY')
+        ENV.delete('LANGFUSE_SECRET_KEY')
+        ENV.delete('LANGFUSE_HOST')
+        ENV.delete('LANGFUSE_PROFILE')
+      end
 
-      expect(prompt).to receive(:say).twice
-      expect(command).to receive(:open_browser)
+      it 'uses environment variables without prompting' do
+        command = described_class.new
+        allow(command).to receive(:options).and_return({})
 
-      expect(prompt).to receive(:ask)
-        .with('Enter your Langfuse public key:', required: true)
-        .and_return('pk_test')
+        # Should NOT prompt for any values
+        expect(prompt).not_to receive(:ask)
+        expect(prompt).not_to receive(:mask)
+        expect(prompt).not_to receive(:say).with(/Visit/)
 
-      expect(prompt).to receive(:mask)
-        .with('Enter your Langfuse secret key:', required: true)
-        .and_return('sk_test')
+        # Mock connection test
+        expect(client).to receive(:list_traces).with(limit: 1).and_return([])
 
-      expect(prompt).to receive(:ask)
-        .with('Enter host:', default: 'https://cloud.langfuse.com')
-        .and_return('https://cloud.langfuse.com')
+        expect(prompt).to receive(:ok).with('Testing connection... Success!')
+        expect(prompt).to receive(:ok).with(/Configuration saved/)
 
-      expect(prompt).to receive(:ask)
-        .with('Save as profile name:', default: 'default')
-        .and_return('default')
+        # Mock config save
+        mock_config = instance_double(Langfuse::CLI::Config)
+        allow(Langfuse::CLI::Config).to receive(:new).and_return(mock_config)
+        expect(mock_config).to receive(:save).with('test-profile').and_return(true)
 
-      expect(client).to receive(:list_traces)
-        .and_raise(Langfuse::CLI::Client::AuthenticationError, 'Invalid credentials')
+        output = capture_stdout { command.setup }
+        expect(output).to include('Running in non-interactive mode')
+      end
 
-      expect(prompt).to receive(:error).with(/Connection test failed/)
-      expect(prompt).to receive(:error).with(/Please check your credentials/)
+      it 'handles connection failures in non-interactive mode' do
+        command = described_class.new
+        allow(command).to receive(:options).and_return({})
+        allow(command).to receive(:exit)
 
-      expect { command.setup }.to output.to_stdout
+        expect(client).to receive(:list_traces)
+          .and_raise(Langfuse::CLI::Client::AuthenticationError, 'Invalid credentials')
+
+        expect(prompt).to receive(:error).with(/Connection test failed/)
+        expect(prompt).to receive(:error).with(/Please check your credentials/)
+
+        output = capture_stdout { command.setup }
+        expect(output).to include('Running in non-interactive mode')
+      end
     end
   end
 

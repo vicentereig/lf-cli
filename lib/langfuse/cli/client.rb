@@ -9,6 +9,7 @@ module Langfuse
       class AuthenticationError < APIError; end
       class NotFoundError < APIError; end
       class RateLimitError < APIError; end
+      class TimeoutError < APIError; end
 
       attr_reader :host, :public_key
 
@@ -68,6 +69,10 @@ module Langfuse
 
       def build_connection
         Faraday.new(url: @host) do |conn|
+          # Set short timeouts to prevent hanging
+          conn.options.timeout = 2       # 2 seconds read timeout
+          conn.options.open_timeout = 2  # 2 seconds connection timeout
+
           conn.request :authorization, :basic, @public_key, @secret_key
           conn.request :json
           conn.request :retry, {
@@ -79,6 +84,12 @@ module Langfuse
             methods: [:get, :post]
           }
           conn.response :json, content_type: /\bjson$/
+
+          # Enable debug logging if DEBUG=1
+          if ENV['DEBUG'] == '1'
+            conn.response :logger, nil, { headers: true, bodies: true }
+          end
+
           conn.adapter Faraday.default_adapter
         end
       end
@@ -98,11 +109,16 @@ module Langfuse
                    end
 
         handle_response(response)
+      rescue Faraday::TimeoutError => e
+        raise TimeoutError, "Request timed out. Please check your network connection and host URL."
+      rescue Faraday::ConnectionFailed => e
+        raise APIError, "Connection failed: #{e.message}"
       end
 
       def paginate(path, params = {})
         page = params[:page] || 1
         limit = params[:limit] || 50
+        requested_limit = limit  # Remember the original limit to stop pagination
         all_results = []
 
         loop do
@@ -114,6 +130,9 @@ module Langfuse
 
           all_results.concat(Array(data))
 
+          # Stop if we've collected enough results
+          break if all_results.length >= requested_limit
+
           # Check if there are more pages
           meta = response.is_a?(Hash) ? response['meta'] : nil
           break unless meta && meta['totalPages'] && page < meta['totalPages']
@@ -121,7 +140,8 @@ module Langfuse
           page += 1
         end
 
-        all_results
+        # Return only the requested number of results
+        all_results.take(requested_limit)
       end
 
       def handle_response(response)

@@ -11,27 +11,63 @@ module Langfuse
           true
         end
 
-        desc 'setup', 'Interactive configuration setup'
+        desc 'setup', 'Interactive configuration setup (supports env vars for non-interactive mode)'
+        long_desc <<-LONGDESC
+          Set up Langfuse CLI configuration interactively or via environment variables.
+
+          Environment variables (for non-interactive mode):
+            LANGFUSE_PROJECT_NAME - Your Langfuse project name
+            LANGFUSE_PUBLIC_KEY   - Your Langfuse public key
+            LANGFUSE_SECRET_KEY   - Your Langfuse secret key
+            LANGFUSE_HOST         - Langfuse host URL (default: https://cloud.langfuse.com)
+            LANGFUSE_PROFILE      - Profile name to save as (default: default)
+
+          Examples:
+            # Interactive mode
+            $ lf config setup
+
+            # Non-interactive mode via environment variables
+            $ LANGFUSE_PROJECT_NAME=my-project \\
+              LANGFUSE_PUBLIC_KEY=pk-lf-xxx \\
+              LANGFUSE_SECRET_KEY=sk-lf-xxx \\
+              LANGFUSE_PROFILE=my-profile \\
+              lf config setup
+        LONGDESC
         def setup
           prompt = TTY::Prompt.new
 
-          puts "\n🔑 Langfuse CLI Configuration Setup\n\n"
+          # Check for environment variables for non-interactive mode
+          project_name = ENV['LANGFUSE_PROJECT_NAME']
+          public_key = ENV['LANGFUSE_PUBLIC_KEY']
+          secret_key = ENV['LANGFUSE_SECRET_KEY']
+          host = ENV['LANGFUSE_HOST'] || 'https://cloud.langfuse.com'
+          profile_name = ENV['LANGFUSE_PROFILE'] || 'default'
 
-          # Ask for project name
-          project_name = prompt.ask('Enter your Langfuse project name:', required: true)
+          # Determine if we're in non-interactive mode
+          non_interactive = !public_key.nil? && !secret_key.nil?
 
-          # Open browser to settings page
-          host = 'https://cloud.langfuse.com'
-          settings_url = "#{host}/project/#{project_name}/settings"
-          prompt.say("Opening browser to: #{settings_url}")
-          prompt.say("(Or visit manually to get your API keys)\n")
-          open_browser(settings_url)
+          if non_interactive
+            puts "🔑 Running in non-interactive mode (using environment variables)\n\n"
+          else
+            puts "\n🔑 Langfuse CLI Configuration Setup\n\n"
+          end
 
-          # Prompt for credentials
-          public_key = prompt.ask('Enter your Langfuse public key:', required: true)
-          secret_key = prompt.mask('Enter your Langfuse secret key:', required: true)
-          host = prompt.ask('Enter host:', default: 'https://cloud.langfuse.com')
-          profile_name = prompt.ask('Save as profile name:', default: 'default')
+          # Prompt for missing values in interactive mode
+          unless non_interactive
+            project_name ||= prompt.ask('Enter your Langfuse project name:', required: false)
+
+            # Show URL hint if project name was provided
+            if project_name && !project_name.empty?
+              settings_url = "#{host}/project/#{project_name}/settings"
+              prompt.say("💡 Visit: #{settings_url}")
+              prompt.say("   (to get your API keys)\n")
+            end
+
+            public_key = prompt.ask('Enter your Langfuse public key:', required: true)
+            secret_key = prompt.mask('Enter your Langfuse secret key:', required: true)
+            host = prompt.ask('Enter host:', default: 'https://cloud.langfuse.com')
+            profile_name = prompt.ask('Save as profile name:', default: 'default')
+          end
 
           # Test connection
           begin
@@ -49,6 +85,10 @@ module Langfuse
             config.save(profile_name)
             prompt.ok("Configuration saved to ~/.langfuse/config.yml")
             puts "\nYou're all set! Try: langfuse traces list"
+          rescue Client::TimeoutError => e
+            prompt.error("Connection test failed: #{e.message}")
+            prompt.error("The host '#{host}' may be incorrect or unreachable.")
+            exit 1
           rescue Client::AuthenticationError => e
             prompt.error("Connection test failed: #{e.message}")
             prompt.error("Please check your credentials and try again.")
@@ -123,20 +163,6 @@ module Langfuse
         end
 
         private
-
-        def open_browser(url)
-          case RbConfig::CONFIG['host_os']
-          when /mswin|mingw|cygwin/
-            system("start #{url}")
-          when /darwin/
-            system("open #{url}")
-          when /linux|bsd/
-            system("xdg-open #{url}")
-          else
-            # Fallback - just print the URL
-            puts "Please open: #{url}"
-          end
-        end
 
         def mask_key(key)
           return '' if key.nil? || key.empty?
