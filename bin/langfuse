@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "langfuse_cli"
+
+Langfuse::CLI::CLI.start(ARGV)
