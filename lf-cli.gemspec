@@ -1,14 +1,14 @@
 require_relative 'lib/langfuse/cli/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "langfuse-cli"
+  spec.name          = "lf-cli"
   spec.version       = Langfuse::CLI::VERSION
   spec.authors       = ["Vicente Reig Rincon de Arellano"]
   spec.email         = ["hey@vicente.services"]
 
-  spec.summary       = "CLI tool for Langfuse telemetry data"
-  spec.description   = "Command-line interface for querying and analyzing Langfuse LLM observability data"
-  spec.homepage      = "https://github.com/vicentemundim/langfuse-cli"
+  spec.summary       = "An open-source CLI for Langfuse®"
+  spec.description   = "Unofficial command-line interface for querying and analyzing Langfuse LLM observability data. This is a community project not affiliated with Langfuse GmbH."
+  spec.homepage      = "https://github.com/vicentereig/lf-cli"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 2.7.0"
 
@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   # Specify which files should be added to the gem when it is released.
   spec.files = Dir.glob("{lib,bin}/**/*") + %w[README.md LICENSE CHANGELOG.md]
   spec.bindir = "bin"
-  spec.executables = ["langfuse"]
+  spec.executables = ["lf"]
   spec.require_paths = ["lib"]
 
   # Runtime dependencies

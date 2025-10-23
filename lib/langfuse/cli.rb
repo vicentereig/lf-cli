@@ -63,7 +63,7 @@ module Langfuse
 
       desc 'version', 'Show version'
       def version
-        puts "langfuse-cli version #{Langfuse::CLI::VERSION}"
+        puts "lf-cli version #{Langfuse::CLI::VERSION}"
       end
 
       desc 'traces SUBCOMMAND ...ARGS', 'Manage traces'
