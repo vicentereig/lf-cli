@@ -12,13 +12,61 @@ module Langfuse
         end
 
         desc 'query', 'Query metrics with custom parameters'
-        option :view, type: :string, required: true, desc: 'View type (traces, observations, scores-numeric, scores-categorical)'
-        option :measure, type: :string, required: true, desc: 'Measure (count, latency, value, tokens, cost)'
-        option :aggregation, type: :string, required: true, desc: 'Aggregation (count, sum, avg, p50, p95, p99, min, max, histogram)'
-        option :dimensions, type: :array, desc: 'Dimensions to group by (e.g., name, userId, sessionId)'
+        long_desc <<-LONGDESC
+          Query Langfuse metrics with flexible aggregations and dimensions.
+
+          REQUIRED OPTIONS:
+            --view: View type to query
+              Valid values: traces, observations, scores-numeric, scores-categorical
+
+            --measure: Metric to measure
+              Valid values: count, latency, value, tokens, cost
+
+            --aggregation: How to aggregate the measure
+              Valid values: count, sum, avg, p50, p95, p99, min, max, histogram
+
+          OPTIONAL:
+            --dimensions: Fields to group by (repeatable)
+              Examples: name, userId, sessionId, model, type
+
+            --from, --to: Time range (ISO 8601 or relative like "1 hour ago")
+
+            --granularity: Time bucketing
+              Valid values: minute, hour, day, week, month, auto
+
+          EXAMPLES:
+
+            # Count all traces
+            langfuse metrics query --view traces --measure count --aggregation count
+
+            # Average latency by trace name
+            langfuse metrics query --view observations --measure latency --aggregation avg --dimensions name
+
+            # Token usage with time range
+            langfuse metrics query --view observations --measure tokens --aggregation sum --from "2024-01-01" --to "2024-12-31"
+
+            # P95 latency grouped by model
+            langfuse metrics query --view observations --measure latency --aggregation p95 --dimensions model
+
+          API REFERENCE:
+            Full API documentation: https://api.reference.langfuse.com/
+            OpenAPI spec: https://cloud.langfuse.com/generated/api/openapi.yml
+        LONGDESC
+        option :view, type: :string, required: true,
+               enum: %w[traces observations scores-numeric scores-categorical],
+               desc: 'View type'
+        option :measure, type: :string, required: true,
+               enum: %w[count latency value tokens cost],
+               desc: 'Measure type'
+        option :aggregation, type: :string, required: true,
+               enum: %w[count sum avg p50 p95 p99 min max histogram],
+               desc: 'Aggregation function'
+        option :dimensions, type: :array, desc: 'Fields to group by (e.g., name userId sessionId model)'
         option :from, type: :string, desc: 'Start timestamp (ISO 8601 or relative)'
         option :to, type: :string, desc: 'End timestamp (ISO 8601 or relative)'
-        option :granularity, type: :string, desc: 'Time granularity (minute, hour, day, week, month, auto)'
+        option :granularity, type: :string,
+               enum: %w[minute hour day week month auto],
+               desc: 'Time granularity'
         option :limit, type: :numeric, desc: 'Limit number of results', default: 100
         def query
           query_params = build_query(options)

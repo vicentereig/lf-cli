@@ -11,6 +11,42 @@ module Langfuse
         end
 
         desc 'list', 'List traces'
+        long_desc <<-LONGDESC
+          List traces with optional filtering.
+
+          Traces represent complete workflows or conversations in Langfuse.
+
+          FILTERS:
+            --name: Filter by trace name
+
+            --user-id: Filter by user ID
+
+            --session-id: Filter by session ID
+
+            --tags: Filter by tags (repeatable)
+
+            --from, --to: Time range (ISO 8601 or relative like "1 hour ago")
+
+          OUTPUT OPTIONS:
+            Global options: --format [table|json|csv|markdown], --output FILE
+
+          EXAMPLES:
+
+            # List recent traces
+            langfuse traces list --from "1 hour ago" --limit 20
+
+            # Find traces by name
+            langfuse traces list --name "chat_completion"
+
+            # Filter by user and session
+            langfuse traces list --user-id user_123 --session-id sess_456
+
+            # Export to CSV
+            langfuse traces list --format csv --output traces.csv
+
+          API REFERENCE:
+            Full API documentation: https://api.reference.langfuse.com/
+        LONGDESC
         option :from, type: :string, desc: 'Start timestamp (ISO 8601 or relative like "1 hour ago")'
         option :to, type: :string, desc: 'End timestamp (ISO 8601 or relative)'
         option :name, type: :string, desc: 'Filter by trace name'

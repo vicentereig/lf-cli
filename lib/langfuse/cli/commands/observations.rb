@@ -11,9 +11,42 @@ module Langfuse
         end
 
         desc 'list', 'List observations'
+        long_desc <<-LONGDESC
+          List observations with optional filtering.
+
+          Observations represent LLM calls, spans, or events in your traces.
+
+          FILTERS:
+            --type: Observation type
+              Valid values: generation, span, event
+
+            --trace-id: Filter by parent trace ID
+
+            --name: Filter by observation name
+
+            --user-id: Filter by user ID
+
+            --from, --to: Time range (ISO 8601 or relative like "1 hour ago")
+
+          EXAMPLES:
+
+            # List all generations
+            langfuse observations list --type generation
+
+            # List observations for a specific trace
+            langfuse observations list --trace-id trace_123
+
+            # List recent observations
+            langfuse observations list --from "1 hour ago" --limit 20
+
+          API REFERENCE:
+            Full API documentation: https://api.reference.langfuse.com/
+        LONGDESC
         option :trace_id, type: :string, desc: 'Filter by trace ID'
         option :name, type: :string, desc: 'Filter by observation name'
-        option :type, type: :string, desc: 'Filter by type (generation, span, event)'
+        option :type, type: :string,
+               enum: %w[generation span event],
+               desc: 'Filter by type'
         option :user_id, type: :string, desc: 'Filter by user ID'
         option :from, type: :string, desc: 'Start timestamp (ISO 8601 or relative)'
         option :to, type: :string, desc: 'End timestamp (ISO 8601 or relative)'
