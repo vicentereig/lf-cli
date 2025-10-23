@@ -6,12 +6,11 @@ require_relative 'cli/commands/traces'
 require_relative 'cli/commands/sessions'
 require_relative 'cli/commands/observations'
 require_relative 'cli/commands/scores'
+require_relative 'cli/commands/metrics'
 require_relative 'cli/commands/config'
 
 module Langfuse
   module CLI
-    # Forward declarations for subcommands not yet implemented
-    class Metrics < Thor; end
 
     class Main < Thor
       class << self
@@ -77,7 +76,7 @@ module Langfuse
       subcommand 'observations', Commands::Observations
 
       desc 'metrics SUBCOMMAND ...ARGS', 'Query metrics'
-      subcommand 'metrics', Metrics
+      subcommand 'metrics', Commands::Metrics
 
       desc 'scores SUBCOMMAND ...ARGS', 'Manage scores'
       subcommand 'scores', Commands::Scores
