@@ -1,10 +1,13 @@
 require 'thor'
 require 'json'
+require 'sorbet-runtime'
+require_relative '../types'
 
 module Langfuse
   module CLI
     module Commands
       class Metrics < Thor
+        extend T::Sig
         namespace :metrics
 
         def self.exit_on_failure?
@@ -107,40 +110,32 @@ module Langfuse
           )
         end
 
+        sig { params(opts: T::Hash[Symbol, T.untyped]).returns(T::Hash[String, T.untyped]) }
         def build_query(opts)
-          query = {}
+          # Validate enum values
+          Types::MetricsView.deserialize(opts[:view])
+          Types::Measure.deserialize(opts[:measure])
+          Types::Aggregation.deserialize(opts[:aggregation])
+          Types::TimeGranularity.deserialize(opts[:granularity]) if opts[:granularity]
 
-          # Required fields
-          query['view'] = opts[:view]
-          query['metrics'] = [
-            {
-              'measure' => opts[:measure],
-              'aggregation' => opts[:aggregation]
-            }
-          ]
+          # Build query using struct
+          query = Types::MetricsQuery.new(
+            view: opts[:view],
+            measure: opts[:measure],
+            aggregation: opts[:aggregation],
+            dimensions: opts[:dimensions],
+            from_timestamp: opts[:from] ? parse_timestamp(opts[:from]) : nil,
+            to_timestamp: opts[:to] ? parse_timestamp(opts[:to]) : nil,
+            granularity: opts[:granularity],
+            limit: opts[:limit]
+          )
 
-          # Optional dimensions
-          if opts[:dimensions] && !opts[:dimensions].empty?
-            query['dimensions'] = opts[:dimensions].map { |dim| { 'field' => dim } }
-          end
-
-          # Time range
-          query['fromTimestamp'] = parse_timestamp(opts[:from]) if opts[:from]
-          query['toTimestamp'] = parse_timestamp(opts[:to]) if opts[:to]
-
-          # Time dimension
-          if opts[:granularity]
-            query['timeDimension'] = { 'granularity' => opts[:granularity] }
-          end
-
-          # Limit
-          query['limit'] = opts[:limit] if opts[:limit]
-
-          query
+          query.to_h
         end
 
+        sig { params(timestamp: String).returns(T.nilable(String)) }
         def parse_timestamp(timestamp)
-          return timestamp if timestamp.is_a?(String) && timestamp.match?(/^\d{4}-\d{2}-\d{2}T/)
+          return timestamp if timestamp.match?(/^\d{4}-\d{2}-\d{2}T/)
 
           # Try to parse with chronic if available
           begin

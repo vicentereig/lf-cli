@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "pastel", "~> 0.8"            # Terminal colors
   spec.add_dependency "chronic", "~> 0.10"          # Natural language dates
   spec.add_dependency "csv", "~> 3.0"               # CSV support (Ruby 3.4+)
+  spec.add_dependency "sorbet-runtime", "~> 0.5"    # Runtime type checking
 
   # Development dependencies
   spec.add_development_dependency "rspec", "~> 3.12"
