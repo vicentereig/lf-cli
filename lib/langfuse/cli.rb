@@ -3,15 +3,15 @@ require_relative 'cli/version'
 require_relative 'cli/config'
 require_relative 'cli/client'
 require_relative 'cli/commands/traces'
+require_relative 'cli/commands/sessions'
+require_relative 'cli/commands/observations'
+require_relative 'cli/commands/scores'
 require_relative 'cli/commands/config'
 
 module Langfuse
   module CLI
     # Forward declarations for subcommands not yet implemented
-    class Sessions < Thor; end
-    class Observations < Thor; end
     class Metrics < Thor; end
-    class Scores < Thor; end
 
     class Main < Thor
       class << self
@@ -71,16 +71,16 @@ module Langfuse
       subcommand 'traces', Commands::Traces
 
       desc 'sessions SUBCOMMAND ...ARGS', 'Manage sessions'
-      subcommand 'sessions', Sessions
+      subcommand 'sessions', Commands::Sessions
 
       desc 'observations SUBCOMMAND ...ARGS', 'Manage observations'
-      subcommand 'observations', Observations
+      subcommand 'observations', Commands::Observations
 
       desc 'metrics SUBCOMMAND ...ARGS', 'Query metrics'
       subcommand 'metrics', Metrics
 
       desc 'scores SUBCOMMAND ...ARGS', 'Manage scores'
-      subcommand 'scores', Scores
+      subcommand 'scores', Commands::Scores
 
       desc 'config SUBCOMMAND ...ARGS', 'Manage configuration'
       subcommand 'config', Commands::ConfigCommand
