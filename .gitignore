@@ -49,3 +49,6 @@ Thumbs.db
 
 # VCR cassettes with sensitive data (we'll check in sanitized ones)
 # spec/fixtures/vcr_cassettes/*
+
+# RSpec status file (generated, should not be tracked)
+.rspec_status
