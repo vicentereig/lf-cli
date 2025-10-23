@@ -1,0 +1,65 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: "<LANGFUSE_HOST>/api/public/metrics"
+    body:
+      encoding: UTF-8
+      string: '{"view":"traces","metrics":[{"measure":"count","aggregation":"count"}],"fromTimestamp":"2024-01-01T00:00:00Z","toTimestamp":"2024-12-31T23:59:59Z","limit":10}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.0
+      Authorization:
+      - Basic <LANGFUSE_PUBLIC_KEY>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 405
+      message: Method Not Allowed
+    headers:
+      Date:
+      - Thu, 23 Oct 2025 09:04:43 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '64'
+      Connection:
+      - keep-alive
+      X-Robots-Tag:
+      - noindex
+      X-Content-Type-Options:
+      - nosniff
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Document-Policy:
+      - js-profiling
+      Permissions-Policy:
+      - autoplay=*, fullscreen=*, microphone=*
+      X-Frame-Options:
+      - SAMEORIGIN
+      Vary:
+      - Origin, Accept-Encoding
+      Etag:
+      - '"14iq155slai1s"'
+      Cf-Cache-Status:
+      - DYNAMIC
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Strict-Transport-Security:
+      - max-age=0; includeSubDomains
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=6E3tygsL3z0ASL7vSDR3r%2FkXuge82aL3B8xL5VJWlG5r0UEFb4pIyixPf6e%2BLk%2BVwmfeeJS0%2BaG48BLdCeYRbuwfHftsKt7%2B%2FaGjXPH44RXp"}]}'
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 9930118d88bacea7-MAD
+    body:
+      encoding: UTF-8
+      string: '{"message":"Method not allowed","error":"MethodNotAllowedError"}'
+  recorded_at: Thu, 23 Oct 2025 09:04:43 GMT
+recorded_with: VCR 6.3.1

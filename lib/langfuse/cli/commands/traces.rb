@@ -1,0 +1,130 @@
+require 'thor'
+
+module Langfuse
+  module CLI
+    module Commands
+      class Traces < Thor
+        namespace :traces
+
+        def self.exit_on_failure?
+          true
+        end
+
+        desc 'list', 'List traces'
+        option :from, type: :string, desc: 'Start timestamp (ISO 8601 or relative like "1 hour ago")'
+        option :to, type: :string, desc: 'End timestamp (ISO 8601 or relative)'
+        option :name, type: :string, desc: 'Filter by trace name'
+        option :user_id, type: :string, desc: 'Filter by user ID'
+        option :session_id, type: :string, desc: 'Filter by session ID'
+        option :tags, type: :array, desc: 'Filter by tags'
+        option :limit, type: :numeric, desc: 'Limit number of results'
+        option :page, type: :numeric, desc: 'Page number'
+        def list
+          filters = build_filters(options)
+          traces = client.list_traces(filters)
+          output_result(traces)
+        rescue Client::AuthenticationError => e
+          puts "Authentication Error: #{e.message}"
+          exit 1
+        rescue Client::APIError => e
+          puts "Error: #{e.message}"
+          exit 1
+        end
+
+        desc 'get TRACE_ID', 'Get a specific trace'
+        option :with_observations, type: :boolean, default: false, desc: 'Include all observations'
+        def get(trace_id)
+          trace = client.get_trace(trace_id)
+          output_result(trace)
+        rescue Client::NotFoundError => e
+          puts "Error: Trace not found - #{trace_id}"
+          exit 1
+        rescue Client::APIError => e
+          puts "Error: #{e.message}"
+          exit 1
+        end
+
+        private
+
+        def client
+          @client ||= begin
+            config = load_config
+            unless config.valid?
+              error_message = "Missing required configuration: #{config.missing_fields.join(', ')}"
+              error_message += "\n\nPlease set environment variables or run: langfuse config setup"
+              raise Error, error_message
+            end
+            Client.new(config)
+          end
+        end
+
+        def load_config
+          Config.new(
+            profile: parent_options[:profile],
+            public_key: parent_options[:public_key],
+            secret_key: parent_options[:secret_key],
+            host: parent_options[:host],
+            format: parent_options[:format],
+            limit: parent_options[:limit] || options[:limit]
+          )
+        end
+
+        def build_filters(opts)
+          filters = {}
+          filters[:from] = opts[:from] if opts[:from]
+          filters[:to] = opts[:to] if opts[:to]
+          filters[:name] = opts[:name] if opts[:name]
+          filters[:user_id] = opts[:user_id] if opts[:user_id]
+          filters[:session_id] = opts[:session_id] if opts[:session_id]
+          filters[:tags] = opts[:tags] if opts[:tags]
+          filters[:limit] = opts[:limit] if opts[:limit]
+          filters[:page] = opts[:page] if opts[:page]
+          filters
+        end
+
+        def output_result(data)
+          formatted = format_output(data)
+
+          if parent_options[:output]
+            File.write(parent_options[:output], formatted)
+            puts "Output written to #{parent_options[:output]}" if parent_options[:verbose]
+          else
+            puts formatted
+          end
+        end
+
+        def format_output(data)
+          format_type = parent_options[:format] || 'table'
+
+          case format_type
+          when 'json'
+            require 'json'
+            JSON.pretty_generate(data)
+          when 'csv'
+            require_relative '../formatters/csv_formatter'
+            Formatters::CSVFormatter.format(data)
+          when 'markdown'
+            require_relative '../formatters/markdown_formatter'
+            Formatters::MarkdownFormatter.format(data)
+          else # table
+            require_relative '../formatters/table_formatter'
+            Formatters::TableFormatter.format(data)
+          end
+        end
+
+        def parent_options
+          @parent_options ||= begin
+            # Try to get parent options from Thor
+            if parent.respond_to?(:options)
+              parent.options
+            else
+              {}
+            end
+          rescue
+            {}
+          end
+        end
+      end
+    end
+  end
+end

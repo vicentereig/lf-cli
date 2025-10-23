@@ -1,0 +1,64 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: "<LANGFUSE_HOST>/api/public/sessions?fromTimestamp=2024-01-01T00:00:00Z&limit=5&page=1&toTimestamp=2024-12-31T23:59:59Z"
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Faraday v2.14.0
+      Authorization:
+      - Basic <LANGFUSE_PUBLIC_KEY>
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Thu, 23 Oct 2025 09:04:42 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '83'
+      Connection:
+      - keep-alive
+      X-Robots-Tag:
+      - noindex
+      X-Content-Type-Options:
+      - nosniff
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Document-Policy:
+      - js-profiling
+      Permissions-Policy:
+      - autoplay=*, fullscreen=*, microphone=*
+      X-Frame-Options:
+      - SAMEORIGIN
+      Vary:
+      - Origin, Accept-Encoding
+      Etag:
+      - '"shlzp847bz2b"'
+      Cf-Cache-Status:
+      - DYNAMIC
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Strict-Transport-Security:
+      - max-age=0; includeSubDomains
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=EsQ%2BqsvMUXYDoAnBj6DBFybdQNjaC14vFcOOv5OV%2FrOBsV5pVp%2Fb7CAQ%2FOl1Um8KWUvKPNONWzaDeIVHLRWNrCWx7pSdFPLeez4jUd35BQ%3D%3D"}]}'
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 993011871d2cec95-MAD
+    body:
+      encoding: UTF-8
+      string: '{"message":"Invalid credentials. Confirm that you''ve configured the
+        correct host."}'
+  recorded_at: Thu, 23 Oct 2025 09:04:42 GMT
+recorded_with: VCR 6.3.1

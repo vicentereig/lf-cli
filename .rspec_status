@@ -1,0 +1,32 @@
+example_id                                                 | status | run_time        |
+---------------------------------------------------------- | ------ | --------------- |
+./spec/unit/commands/traces_spec.rb[1:1:1]                 | failed | 0.00818 seconds |
+./spec/unit/commands/traces_spec.rb[1:1:2]                 | failed | 0.00031 seconds |
+./spec/unit/commands/traces_spec.rb[1:1:3]                 | failed | 0.00023 seconds |
+./spec/unit/commands/traces_spec.rb[1:2:1]                 | failed | 0.00029 seconds |
+./spec/unit/commands/traces_spec.rb[1:2:2]                 | failed | 0.00021 seconds |
+./spec/unit/commands/traces_spec.rb[1:3:1]                 | failed | 0.00023 seconds |
+./spec/unit/commands/traces_spec.rb[1:3:2]                 | failed | 0.00021 seconds |
+./spec/unit/formatters/csv_formatter_spec.rb[1:1:1:1]      | passed | 0.00214 seconds |
+./spec/unit/formatters/csv_formatter_spec.rb[1:1:1:2]      | passed | 0.00128 seconds |
+./spec/unit/formatters/csv_formatter_spec.rb[1:1:1:3]      | passed | 0.0001 seconds  |
+./spec/unit/formatters/csv_formatter_spec.rb[1:1:2:1]      | passed | 0.00004 seconds |
+./spec/unit/formatters/csv_formatter_spec.rb[1:1:3:1]      | passed | 0.00006 seconds |
+./spec/unit/formatters/csv_formatter_spec.rb[1:1:4:1]      | passed | 0.00014 seconds |
+./spec/unit/formatters/csv_formatter_spec.rb[1:1:5:1]      | passed | 0.00012 seconds |
+./spec/unit/formatters/csv_formatter_spec.rb[1:1:6:1]      | passed | 0.00008 seconds |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:1:1] | passed | 0.00006 seconds |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:1:2] | passed | 0.00004 seconds |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:1:3] | passed | 0.0005 seconds  |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:1:4] | passed | 0.00006 seconds |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:2:1] | passed | 0.00004 seconds |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:3:1] | passed | 0.00006 seconds |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:4:1] | passed | 0.00004 seconds |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:5:1] | passed | 0.00004 seconds |
+./spec/unit/formatters/markdown_formatter_spec.rb[1:1:6:1] | passed | 0.00004 seconds |
+./spec/unit/formatters/table_formatter_spec.rb[1:1:1:1]    | passed | 0.00025 seconds |
+./spec/unit/formatters/table_formatter_spec.rb[1:1:1:2]    | passed | 0.00016 seconds |
+./spec/unit/formatters/table_formatter_spec.rb[1:1:2:1]    | passed | 0.00004 seconds |
+./spec/unit/formatters/table_formatter_spec.rb[1:1:3:1]    | passed | 0.00013 seconds |
+./spec/unit/formatters/table_formatter_spec.rb[1:1:4:1]    | passed | 0.00011 seconds |
+./spec/unit/formatters/table_formatter_spec.rb[1:1:5:1]    | passed | 0.00014 seconds |

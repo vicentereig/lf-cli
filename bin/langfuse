@@ -3,4 +3,13 @@
 require "bundler/setup"
 require "langfuse_cli"
 
-Langfuse::CLI::CLI.start(ARGV)
+begin
+  Langfuse::CLI::Main.start(ARGV)
+rescue Langfuse::CLI::Error => e
+  puts "Error: #{e.message}"
+  exit 1
+rescue StandardError => e
+  puts "Unexpected error: #{e.message}"
+  puts e.backtrace if ENV['DEBUG']
+  exit 1
+end
