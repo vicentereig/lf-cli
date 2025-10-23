@@ -3,6 +3,7 @@ require_relative 'cli/version'
 require_relative 'cli/config'
 require_relative 'cli/client'
 require_relative 'cli/commands/traces'
+require_relative 'cli/commands/config'
 
 module Langfuse
   module CLI
@@ -11,7 +12,6 @@ module Langfuse
     class Observations < Thor; end
     class Metrics < Thor; end
     class Scores < Thor; end
-    class ConfigCommand < Thor; end
 
     class Main < Thor
       class << self
@@ -83,7 +83,7 @@ module Langfuse
       subcommand 'scores', Scores
 
       desc 'config SUBCOMMAND ...ARGS', 'Manage configuration'
-      subcommand 'config', ConfigCommand
+      subcommand 'config', Commands::ConfigCommand
 
       private
 
