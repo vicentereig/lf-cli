@@ -88,14 +88,14 @@ module Langfuse
           rescue Client::TimeoutError => e
             prompt.error("Connection test failed: #{e.message}")
             prompt.error("The host '#{host}' may be incorrect or unreachable.")
-            exit 1
+            raise_cli_error("Connection test failed: #{e.message}")
           rescue Client::AuthenticationError => e
             prompt.error("Connection test failed: #{e.message}")
             prompt.error("Please check your credentials and try again.")
-            exit 1
+            raise_cli_error("Connection test failed: #{e.message}")
           rescue Client::APIError => e
             prompt.error("Connection test failed: #{e.message}")
-            exit 1
+            raise_cli_error("Connection test failed: #{e.message}")
           end
         end
 
@@ -169,6 +169,10 @@ module Langfuse
           return key if key.length < 8
 
           "#{key[0..7]}#{'*' * (key.length - 8)}"
+        end
+
+        def raise_cli_error(message)
+          raise Langfuse::CLI::Error, message
         end
       end
     end

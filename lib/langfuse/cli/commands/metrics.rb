@@ -79,11 +79,9 @@ module Langfuse
           output_data = result.is_a?(Hash) && result['data'] ? result['data'] : result
           output_result(output_data)
         rescue Client::AuthenticationError => e
-          puts "Authentication Error: #{e.message}"
-          exit 1
+          raise_cli_error("Authentication Error: #{e.message}")
         rescue Client::APIError => e
-          puts "Error: #{e.message}"
-          exit 1
+          raise_cli_error("Error: #{e.message}")
         end
 
         private
@@ -186,6 +184,10 @@ module Langfuse
           rescue
             {}
           end
+        end
+
+        def raise_cli_error(message)
+          raise Langfuse::CLI::Error, message
         end
       end
     end

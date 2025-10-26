@@ -20,11 +20,9 @@ module Langfuse
           sessions = client.list_sessions(filters)
           output_result(sessions)
         rescue Client::AuthenticationError => e
-          puts "Authentication Error: #{e.message}"
-          exit 1
+          raise_cli_error("Authentication Error: #{e.message}")
         rescue Client::APIError => e
-          puts "Error: #{e.message}"
-          exit 1
+          raise_cli_error("Error: #{e.message}")
         end
 
         desc 'show SESSION_ID', 'Show a specific session'
@@ -32,12 +30,10 @@ module Langfuse
         def show(session_id)
           session = client.get_session(session_id)
           output_result(session)
-        rescue Client::NotFoundError => e
-          puts "Error: Session not found - #{session_id}"
-          exit 1
+        rescue Client::NotFoundError
+          raise_cli_error("Session not found - #{session_id}")
         rescue Client::APIError => e
-          puts "Error: #{e.message}"
-          exit 1
+          raise_cli_error("Error: #{e.message}")
         end
 
         private
@@ -114,6 +110,10 @@ module Langfuse
           rescue
             {}
           end
+        end
+
+        def raise_cli_error(message)
+          raise Langfuse::CLI::Error, message
         end
       end
     end

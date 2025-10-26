@@ -79,7 +79,6 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
       it 'handles connection test failures gracefully' do
         command = described_class.new
         allow(command).to receive(:options).and_return({})
-        allow(command).to receive(:exit) # Stub exit to prevent test from exiting
 
         expect(prompt).to receive(:ask)
           .with('Enter your Langfuse project name:', required: false)
@@ -109,7 +108,7 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
         expect(prompt).to receive(:error).with(/Connection test failed/)
         expect(prompt).to receive(:error).with(/Please check your credentials/)
 
-        expect { command.setup }.to output.to_stdout
+        expect { command.setup }.to raise_error(Langfuse::CLI::Error, /Connection test failed/)
       end
     end
 
@@ -156,7 +155,6 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
       it 'handles connection failures in non-interactive mode' do
         command = described_class.new
         allow(command).to receive(:options).and_return({})
-        allow(command).to receive(:exit)
 
         expect(client).to receive(:list_traces)
           .and_raise(Langfuse::CLI::Client::AuthenticationError, 'Invalid credentials')
@@ -164,8 +162,7 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
         expect(prompt).to receive(:error).with(/Connection test failed/)
         expect(prompt).to receive(:error).with(/Please check your credentials/)
 
-        output = capture_stdout { command.setup }
-        expect(output).to include('Running in non-interactive mode')
+        expect { command.setup }.to raise_error(Langfuse::CLI::Error, /Connection test failed/)
       end
     end
   end

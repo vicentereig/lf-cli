@@ -107,7 +107,7 @@ RSpec.describe Langfuse::CLI::Commands::Sessions do
       allow(command).to receive(:parent_options).and_return({})
       allow(client).to receive(:list_sessions).and_raise(Langfuse::CLI::Client::APIError, 'API Error')
 
-      expect { command.list }.to output(/Error/).to_stdout
+      expect { command.list }.to raise_error(Langfuse::CLI::Error, /API Error/)
     end
   end
 

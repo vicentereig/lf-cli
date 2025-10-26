@@ -57,23 +57,19 @@ module Langfuse
           observations = client.list_observations(filters)
           output_result(observations)
         rescue Client::AuthenticationError => e
-          puts "Authentication Error: #{e.message}"
-          exit 1
+          raise_cli_error("Authentication Error: #{e.message}")
         rescue Client::APIError => e
-          puts "Error: #{e.message}"
-          exit 1
+          raise_cli_error("Error: #{e.message}")
         end
 
         desc 'get OBSERVATION_ID', 'Get a specific observation'
         def get(observation_id)
           observation = client.get_observation(observation_id)
           output_result(observation)
-        rescue Client::NotFoundError => e
-          puts "Error: Observation not found - #{observation_id}"
-          exit 1
+        rescue Client::NotFoundError
+          raise_cli_error("Observation not found - #{observation_id}")
         rescue Client::APIError => e
-          puts "Error: #{e.message}"
-          exit 1
+          raise_cli_error("Error: #{e.message}")
         end
 
         private
@@ -154,6 +150,10 @@ module Langfuse
           rescue
             {}
           end
+        end
+
+        def raise_cli_error(message)
+          raise Langfuse::CLI::Error, message
         end
       end
     end

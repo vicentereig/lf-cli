@@ -110,7 +110,7 @@ RSpec.describe Langfuse::CLI::Commands::Traces do
       allow(command).to receive(:parent_options).and_return({})
       allow(client).to receive(:list_traces).and_raise(Langfuse::CLI::Client::APIError, 'API Error')
 
-      expect { command.list }.to output(/Error/).to_stdout
+      expect { command.list }.to raise_error(Langfuse::CLI::Error, /API Error/)
     end
 
     it 'handles authentication errors' do
@@ -119,7 +119,7 @@ RSpec.describe Langfuse::CLI::Commands::Traces do
       allow(command).to receive(:parent_options).and_return({})
       allow(client).to receive(:list_traces).and_raise(Langfuse::CLI::Client::AuthenticationError, 'Auth failed')
 
-      expect { command.list }.to output(/Auth/).to_stdout
+      expect { command.list }.to raise_error(Langfuse::CLI::Error, /Authentication Error/)
     end
   end
 

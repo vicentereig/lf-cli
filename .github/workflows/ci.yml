@@ -4,31 +4,23 @@ on:
   push:
     branches:
       - main
-
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
-    strategy:
-      matrix:
-        ruby:
-          - '3.3'
-          - '3.2'
-          - '3.1'
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Ruby
+      - name: Set up Ruby (rbenv)
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby }}
+          ruby-version-file: .ruby-version
+          bundler: '2.6.9'
           bundler-cache: true
 
       - name: Run tests
-        run: bundle exec rspec spec/unit/
+        run: bundle exec rspec spec/unit
 
       - name: Check gem can be built
         run: gem build lf-cli.gemspec
