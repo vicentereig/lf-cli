@@ -20,6 +20,24 @@ module Langfuse
         @connection = build_connection
       end
 
+      # Simple connection test without retries
+      def test_connection
+        test_conn = Faraday.new(url: @host) do |conn|
+          conn.options.timeout = 5
+          conn.options.open_timeout = 5
+          conn.request :authorization, :basic, @public_key, @secret_key
+          conn.response :json, content_type: /\bjson$/
+          conn.adapter Faraday.default_adapter
+        end
+
+        response = test_conn.get('/api/public/traces', { limit: 1 })
+        handle_response(response)
+      rescue Faraday::TimeoutError
+        raise TimeoutError, "Connection timed out. Please check your host URL and network connection."
+      rescue Faraday::ConnectionFailed => e
+        raise APIError, "Connection failed: #{e.message}"
+      end
+
       # Traces API
       def list_traces(filters = {})
         params = build_trace_params(filters)
@@ -69,9 +87,8 @@ module Langfuse
 
       def build_connection
         Faraday.new(url: @host) do |conn|
-          # Set short timeouts to prevent hanging
-          conn.options.timeout = 2       # 2 seconds read timeout
-          conn.options.open_timeout = 2  # 2 seconds connection timeout
+          conn.options.timeout = 30      # 30 seconds read timeout
+          conn.options.open_timeout = 10 # 10 seconds connection timeout
 
           conn.request :authorization, :basic, @public_key, @secret_key
           conn.request :json

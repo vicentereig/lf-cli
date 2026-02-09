@@ -78,8 +78,9 @@ module Langfuse
             )
 
             client = Client.new(config)
-            client.list_traces(limit: 1)
-            prompt.ok('Testing connection... Success!')
+            print "Testing connection... "
+            client.test_connection
+            prompt.ok('Success!')
 
             # Save configuration
             config.save(profile_name)

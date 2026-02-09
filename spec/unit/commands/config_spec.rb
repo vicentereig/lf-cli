@@ -63,9 +63,9 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
           .and_return('default')
 
         # Mock connection test
-        expect(client).to receive(:list_traces).with(limit: 1).and_return([])
+        expect(client).to receive(:test_connection).and_return([])
 
-        expect(prompt).to receive(:ok).with('Testing connection... Success!')
+        expect(prompt).to receive(:ok).with('Success!')
         expect(prompt).to receive(:ok).with(/Configuration saved/)
 
         # Mock config save
@@ -102,7 +102,7 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
           .with('Save as profile name:', default: 'default')
           .and_return('default')
 
-        expect(client).to receive(:list_traces)
+        expect(client).to receive(:test_connection)
           .and_raise(Langfuse::CLI::Client::AuthenticationError, 'Invalid credentials')
 
         expect(prompt).to receive(:error).with(/Connection test failed/)
@@ -138,9 +138,9 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
         expect(prompt).not_to receive(:say).with(/Visit/)
 
         # Mock connection test
-        expect(client).to receive(:list_traces).with(limit: 1).and_return([])
+        expect(client).to receive(:test_connection).and_return([])
 
-        expect(prompt).to receive(:ok).with('Testing connection... Success!')
+        expect(prompt).to receive(:ok).with('Success!')
         expect(prompt).to receive(:ok).with(/Configuration saved/)
 
         # Mock config save
@@ -156,7 +156,7 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
         command = described_class.new
         allow(command).to receive(:options).and_return({})
 
-        expect(client).to receive(:list_traces)
+        expect(client).to receive(:test_connection)
           .and_raise(Langfuse::CLI::Client::AuthenticationError, 'Invalid credentials')
 
         expect(prompt).to receive(:error).with(/Connection test failed/)
