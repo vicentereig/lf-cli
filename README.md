@@ -349,10 +349,11 @@ Pagination strategy: the client keeps fetching pages until it collects the reque
 
 ### Output & Files
 
-- `table` renders ASCII tables via `Formatters::TableFormatter`.
-- `json` streams `JSON.pretty_generate` for direct piping to `jq`.
+- `table` renders ASCII tables via `Formatters::TableFormatter` and truncates oversized cells for terminal safety.
+- `json` prints pretty JSON to stdout for direct piping to `jq`.
 - `csv` and `markdown` use dedicated formatters and require array-like data (single hashes are wrapped automatically).
-- `--output` writes the formatted string verbatim; combine with `--format json` for scripts.
+- `markdown` escapes pipes, normalizes newlines to `<br>`, and truncates oversized cells.
+- `--output` writes to a file; JSON output is written in compact form to reduce memory pressure on large payloads.
 - Use `lf ... --format json | jq ...` for automation recipes.
 
 ### Command Reference

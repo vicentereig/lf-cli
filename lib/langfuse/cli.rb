@@ -1,4 +1,5 @@
 require 'thor'
+require 'json'
 require_relative 'cli/version'
 require_relative 'cli/config'
 require_relative 'cli/client'
@@ -91,7 +92,7 @@ module Langfuse
           config = load_config
           unless config.valid?
             error_message = "Missing required configuration: #{config.missing_fields.join(', ')}"
-            error_message += "\n\nPlease set environment variables or run: langfuse config setup"
+            error_message += "\n\nPlease set environment variables or run: lf config setup"
             raise Error, error_message
           end
           Client.new(config)
@@ -110,20 +111,19 @@ module Langfuse
       end
 
       def output_result(data)
-        formatted = format_output(data)
+        format_type = options[:format] || 'table'
 
         if options[:output]
-          File.write(options[:output], formatted)
+          write_output(options[:output], data, format_type)
           puts "Output written to #{options[:output]}" if options[:verbose]
         else
-          puts formatted
+          puts format_output(data, format_type: format_type)
         end
       end
 
-      def format_output(data)
-        case options[:format]
+      def format_output(data, format_type: 'table')
+        case format_type
         when 'json'
-          require 'json'
           JSON.pretty_generate(data)
         when 'csv'
           # CSV formatting will be implemented in formatters
@@ -135,6 +135,14 @@ module Langfuse
         else # table
           require_relative 'cli/formatters/table_formatter'
           Formatters::TableFormatter.format(data)
+        end
+      end
+
+      def write_output(path, data, format_type)
+        if format_type == 'json'
+          File.open(path, 'w') { |file| JSON.dump(data, file) }
+        else
+          File.write(path, format_output(data, format_type: format_type))
         end
       end
     end

@@ -127,6 +127,11 @@ RSpec.describe Langfuse::CLI::Config do
       before do
         config_data = {
           'profiles' => {
+            'default' => {
+              'public_key' => 'default_public_key',
+              'secret_key' => 'default_secret_key',
+              'host' => 'https://default.langfuse.com'
+            },
             'production' => {
               'public_key' => 'prod_public_key',
               'secret_key' => 'prod_secret_key',
@@ -157,6 +162,14 @@ RSpec.describe Langfuse::CLI::Config do
         expect(config.public_key).to eq('dev_public_key')
         expect(config.host).to eq('https://dev.langfuse.com')
       end
+
+      it 'falls back to profiles.default when selected profile does not exist' do
+        config = described_class.new(profile: 'missing-profile')
+
+        expect(config.public_key).to eq('default_public_key')
+        expect(config.secret_key).to eq('default_secret_key')
+        expect(config.host).to eq('https://default.langfuse.com')
+      end
     end
   end
 
@@ -173,6 +186,16 @@ RSpec.describe Langfuse::CLI::Config do
     it 'returns false when secret_key is missing' do
       config = described_class.new(
         public_key: 'test_public',
+        host: 'https://test.langfuse.com'
+      )
+
+      expect(config.valid?).to be false
+    end
+
+    it 'returns false when credentials are blank strings' do
+      config = described_class.new(
+        public_key: '   ',
+        secret_key: '',
         host: 'https://test.langfuse.com'
       )
 
@@ -207,6 +230,17 @@ RSpec.describe Langfuse::CLI::Config do
       )
 
       expect(config.missing_fields).to be_empty
+    end
+
+    it 'includes blank values as missing fields' do
+      config = described_class.new(
+        public_key: '',
+        secret_key: '  ',
+        host: ''
+      )
+
+      expect(config.missing_fields).to include('public_key', 'secret_key')
+      expect(config.missing_fields).not_to include('host')
     end
   end
 

@@ -1,5 +1,6 @@
 require 'csv'
 require 'json'
+require 'date'
 
 module Langfuse
   module CLI

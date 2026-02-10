@@ -1,4 +1,5 @@
 require 'thor'
+require 'json'
 
 module Langfuse
   module CLI
@@ -31,13 +32,13 @@ module Langfuse
           EXAMPLES:
 
             # List all generations
-            langfuse observations list --type generation
+            lf observations list --type generation
 
             # List observations for a specific trace
-            langfuse observations list --trace-id trace_123
+            lf observations list --trace-id trace_123
 
             # List recent observations
-            langfuse observations list --from "1 hour ago" --limit 20
+            lf observations list --from "1 hour ago" --limit 20
 
           API REFERENCE:
             Full API documentation: https://api.reference.langfuse.com/
@@ -79,7 +80,7 @@ module Langfuse
             config = load_config
             unless config.valid?
               error_message = "Missing required configuration: #{config.missing_fields.join(', ')}"
-              error_message += "\n\nPlease set environment variables or run: langfuse config setup"
+              error_message += "\n\nPlease set environment variables or run: lf config setup"
               raise Error, error_message
             end
             Client.new(config)
@@ -111,22 +112,19 @@ module Langfuse
         end
 
         def output_result(data)
-          formatted = format_output(data)
+          format_type = parent_options[:format] || 'table'
 
           if parent_options[:output]
-            File.write(parent_options[:output], formatted)
+            write_output(parent_options[:output], data, format_type)
             puts "Output written to #{parent_options[:output]}" if parent_options[:verbose]
           else
-            puts formatted
+            puts format_output(data, format_type: format_type)
           end
         end
 
-        def format_output(data)
-          format_type = parent_options[:format] || 'table'
-
+        def format_output(data, format_type: 'table')
           case format_type
           when 'json'
-            require 'json'
             JSON.pretty_generate(data)
           when 'csv'
             require_relative '../formatters/csv_formatter'
@@ -137,6 +135,14 @@ module Langfuse
           else # table
             require_relative '../formatters/table_formatter'
             Formatters::TableFormatter.format(data)
+          end
+        end
+
+        def write_output(path, data, format_type)
+          if format_type == 'json'
+            File.open(path, 'w') { |file| JSON.dump(data, file) }
+          else
+            File.write(path, format_output(data, format_type: format_type))
           end
         end
 

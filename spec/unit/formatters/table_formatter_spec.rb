@@ -73,5 +73,18 @@ RSpec.describe Langfuse::CLI::Formatters::TableFormatter do
         expect(result).to include('test')
       end
     end
+
+    context 'with very large values' do
+      let(:data) do
+        [
+          { 'id' => '1', 'payload' => 'a' * 5000 }
+        ]
+      end
+
+      it 'truncates large cell values by default' do
+        result = described_class.format(data)
+        expect(result).to include('[truncated')
+      end
+    end
   end
 end

@@ -1,4 +1,5 @@
 require 'thor'
+require 'yaml'
 require 'tty-prompt'
 
 module Langfuse
@@ -85,7 +86,7 @@ module Langfuse
             # Save configuration
             config.save(profile_name)
             prompt.ok("Configuration saved to ~/.langfuse/config.yml")
-            puts "\nYou're all set! Try: langfuse traces list"
+            puts "\nYou're all set! Try: lf traces list"
           rescue Client::TimeoutError => e
             prompt.error("Connection test failed: #{e.message}")
             prompt.error("The host '#{host}' may be incorrect or unreachable.")
@@ -137,17 +138,21 @@ module Langfuse
 
           unless File.exist?(config_file)
             puts "No configuration file found at #{config_file}"
-            puts "Run 'langfuse config setup' to create one."
+            puts "Run 'lf config setup' to create one."
             return
           end
 
-          require 'yaml'
-          config_data = YAML.load_file(config_file)
+          config_data = YAML.safe_load(
+            File.read(config_file),
+            permitted_classes: [],
+            permitted_symbols: [],
+            aliases: false
+          ) || {}
           profiles = config_data['profiles'] || {}
 
           if profiles.empty?
             puts "No profiles configured."
-            puts "Run 'langfuse config setup' to create one."
+            puts "Run 'lf config setup' to create one."
             return
           end
 

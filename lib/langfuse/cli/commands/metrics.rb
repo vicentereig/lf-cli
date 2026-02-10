@@ -40,16 +40,16 @@ module Langfuse
           EXAMPLES:
 
             # Count all traces
-            langfuse metrics query --view traces --measure count --aggregation count
+            lf metrics query --view traces --measure count --aggregation count
 
             # Average latency by trace name
-            langfuse metrics query --view observations --measure latency --aggregation avg --dimensions name
+            lf metrics query --view observations --measure latency --aggregation avg --dimensions name
 
             # Token usage with time range
-            langfuse metrics query --view observations --measure tokens --aggregation sum --from "2024-01-01" --to "2024-12-31"
+            lf metrics query --view observations --measure tokens --aggregation sum --from "2024-01-01" --to "2024-12-31"
 
             # P95 latency grouped by model
-            langfuse metrics query --view observations --measure latency --aggregation p95 --dimensions model
+            lf metrics query --view observations --measure latency --aggregation p95 --dimensions model
 
           API REFERENCE:
             Full API documentation: https://api.reference.langfuse.com/
@@ -91,7 +91,7 @@ module Langfuse
             config = load_config
             unless config.valid?
               error_message = "Missing required configuration: #{config.missing_fields.join(', ')}"
-              error_message += "\n\nPlease set environment variables or run: langfuse config setup"
+              error_message += "\n\nPlease set environment variables or run: lf config setup"
               raise Error, error_message
             end
             Client.new(config)
@@ -146,19 +146,17 @@ module Langfuse
         end
 
         def output_result(data)
-          formatted = format_output(data)
+          format_type = parent_options[:format] || 'table'
 
           if parent_options[:output]
-            File.write(parent_options[:output], formatted)
+            write_output(parent_options[:output], data, format_type)
             puts "Output written to #{parent_options[:output]}" if parent_options[:verbose]
           else
-            puts formatted
+            puts format_output(data, format_type: format_type)
           end
         end
 
-        def format_output(data)
-          format_type = parent_options[:format] || 'table'
-
+        def format_output(data, format_type: 'table')
           case format_type
           when 'json'
             JSON.pretty_generate(data)
@@ -171,6 +169,14 @@ module Langfuse
           else # table
             require_relative '../formatters/table_formatter'
             Formatters::TableFormatter.format(data)
+          end
+        end
+
+        def write_output(path, data, format_type)
+          if format_type == 'json'
+            File.open(path, 'w') { |file| JSON.dump(data, file) }
+          else
+            File.write(path, format_output(data, format_type: format_type))
           end
         end
 

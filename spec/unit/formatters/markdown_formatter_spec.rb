@@ -102,5 +102,31 @@ RSpec.describe Langfuse::CLI::Formatters::MarkdownFormatter do
         expect(result).to include('pipes')
       end
     end
+
+    context 'with multiline values' do
+      let(:data) do
+        [
+          { 'id' => '1', 'output' => "line1\nline2" }
+        ]
+      end
+
+      it 'normalizes newlines for valid markdown tables' do
+        result = described_class.format(data)
+        expect(result).to include('line1<br>line2')
+      end
+    end
+
+    context 'with very large values' do
+      let(:data) do
+        [
+          { 'id' => '1', 'payload' => 'a' * 5000 }
+        ]
+      end
+
+      it 'truncates large cell values by default' do
+        result = described_class.format(data)
+        expect(result).to include('[truncated')
+      end
+    end
   end
 end

@@ -1,9 +1,12 @@
 require 'yaml'
 require 'fileutils'
+require 'sorbet-runtime'
 
 module Langfuse
   module CLI
     class Config
+      extend T::Sig
+
       attr_accessor :public_key, :secret_key, :host, :profile, :output_format, :page_limit
 
       DEFAULT_HOST = 'https://cloud.langfuse.com'
@@ -12,14 +15,16 @@ module Langfuse
       CONFIG_DIR = File.expand_path('~/.langfuse')
       CONFIG_FILE = File.join(CONFIG_DIR, 'config.yml')
 
+      sig { params(options: T::Hash[Symbol, T.untyped]).void }
       def initialize(options = {})
-        @profile = options[:profile] || ENV['LANGFUSE_PROFILE'] || 'default'
+        @profile = normalize_string(options[:profile]) || normalize_string(ENV['LANGFUSE_PROFILE']) || 'default'
         load_config
         merge_options(options)
       end
 
       # Load configuration from file and environment variables
       # Priority: passed options > ENV vars > config file > defaults
+      sig { void }
       def load_config
         # Start with defaults
         @host = DEFAULT_HOST
@@ -38,52 +43,60 @@ module Langfuse
       end
 
       # Load configuration from YAML file
+      sig { void }
       def load_from_file
-        config_data = YAML.load_file(CONFIG_FILE)
+        config_data = read_config_data
 
         # Load profile-specific config
-        profile_config = config_data.dig('profiles', @profile) || config_data['default'] || {}
+        profiles = config_data['profiles'].is_a?(Hash) ? config_data['profiles'] : {}
+        legacy_default = config_data['default'].is_a?(Hash) ? config_data['default'] : {}
+        profile_config = profiles[@profile] || profiles['default'] || legacy_default
 
-        @public_key = profile_config['public_key'] if profile_config['public_key']
-        @secret_key = profile_config['secret_key'] if profile_config['secret_key']
-        @host = profile_config['host'] if profile_config['host']
-        @output_format = profile_config['output_format'] if profile_config['output_format']
-        @page_limit = profile_config['page_limit'] if profile_config['page_limit']
+        @public_key = normalize_string(profile_config['public_key']) || @public_key
+        @secret_key = normalize_string(profile_config['secret_key']) || @secret_key
+        @host = normalize_string(profile_config['host']) || @host
+        @output_format = normalize_string(profile_config['output_format']) || @output_format
+        @page_limit = normalize_integer(profile_config['page_limit']) || @page_limit
       rescue => e
         warn "Warning: Error loading config file: #{e.message}"
       end
 
       # Load configuration from environment variables
+      sig { void }
       def load_from_env
-        @public_key = ENV['LANGFUSE_PUBLIC_KEY'] if ENV['LANGFUSE_PUBLIC_KEY']
-        @secret_key = ENV['LANGFUSE_SECRET_KEY'] if ENV['LANGFUSE_SECRET_KEY']
-        @host = ENV['LANGFUSE_HOST'] if ENV['LANGFUSE_HOST']
+        @public_key = normalize_string(ENV['LANGFUSE_PUBLIC_KEY']) || @public_key
+        @secret_key = normalize_string(ENV['LANGFUSE_SECRET_KEY']) || @secret_key
+        @host = normalize_string(ENV['LANGFUSE_HOST']) || @host
       end
 
       # Merge passed options (highest priority)
+      sig { params(options: T::Hash[Symbol, T.untyped]).void }
       def merge_options(options)
-        @public_key = options[:public_key] if options[:public_key]
-        @secret_key = options[:secret_key] if options[:secret_key]
-        @host = options[:host] if options[:host]
-        @output_format = options[:format] if options[:format]
-        @page_limit = options[:limit] if options[:limit]
+        @public_key = normalize_string(options[:public_key]) || @public_key
+        @secret_key = normalize_string(options[:secret_key]) || @secret_key
+        @host = normalize_string(options[:host]) || @host
+        @output_format = normalize_string(options[:format]) || @output_format
+        @page_limit = normalize_integer(options[:limit]) || @page_limit
       end
 
       # Validate that required configuration is present
+      sig { returns(T::Boolean) }
       def valid?
-        !@public_key.nil? && !@secret_key.nil? && !@host.nil?
+        present?(@public_key) && present?(@secret_key) && present?(@host)
       end
 
       # Get list of missing required fields
+      sig { returns(T::Array[String]) }
       def missing_fields
         fields = []
-        fields << 'public_key' if @public_key.nil?
-        fields << 'secret_key' if @secret_key.nil?
-        fields << 'host' if @host.nil?
+        fields << 'public_key' unless present?(@public_key)
+        fields << 'secret_key' unless present?(@secret_key)
+        fields << 'host' unless present?(@host)
         fields
       end
 
       # Save current configuration to file
+      sig { params(profile_name: T.nilable(String)).returns(T::Boolean) }
       def save(profile_name = nil)
         profile_name ||= @profile
 
@@ -91,7 +104,7 @@ module Langfuse
         FileUtils.mkdir_p(CONFIG_DIR)
 
         # Load existing config or create new
-        config_data = File.exist?(CONFIG_FILE) ? YAML.load_file(CONFIG_FILE) : {}
+        config_data = File.exist?(CONFIG_FILE) ? read_config_data : {}
         config_data['profiles'] ||= {}
 
         # Update profile
@@ -116,11 +129,13 @@ module Langfuse
       end
 
       # Load a specific profile
+      sig { params(profile: T.nilable(String)).returns(Config) }
       def self.load(profile = nil)
         new(profile: profile)
       end
 
       # Get configuration as a hash
+      sig { returns(T::Hash[Symbol, T.untyped]) }
       def to_h
         {
           public_key: @public_key,
@@ -130,6 +145,43 @@ module Langfuse
           output_format: @output_format,
           page_limit: @page_limit
         }
+      end
+
+      private
+
+      sig { params(value: T.untyped).returns(T.nilable(String)) }
+      def normalize_string(value)
+        return nil if value.nil?
+
+        normalized = value.to_s.strip
+        normalized.empty? ? nil : normalized
+      end
+
+      sig { params(value: T.untyped).returns(T.nilable(Integer)) }
+      def normalize_integer(value)
+        return nil if value.nil?
+
+        Integer(value)
+      rescue ArgumentError, TypeError
+        nil
+      end
+
+      sig { params(value: T.nilable(String)).returns(T::Boolean) }
+      def present?(value)
+        !value.nil? && !value.strip.empty?
+      end
+
+      sig { returns(T::Hash[String, T.untyped]) }
+      def read_config_data
+        data = YAML.safe_load(
+          File.read(CONFIG_FILE),
+          permitted_classes: [],
+          permitted_symbols: [],
+          aliases: false
+        )
+        data.is_a?(Hash) ? data : {}
+      rescue Errno::ENOENT
+        {}
       end
     end
   end

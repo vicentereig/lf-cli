@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'langfuse/cli/commands/traces'
 require 'langfuse/cli/config'
 require 'langfuse/cli/client'
+require 'tempfile'
+require 'json'
 
 RSpec.describe Langfuse::CLI::Commands::Traces do
   let(:config) do
@@ -100,6 +102,20 @@ RSpec.describe Langfuse::CLI::Commands::Traces do
 
       output = capture_stdout { command.get('123') }
       expect(output).to include('test_trace')
+    end
+
+    it 'writes compact json when output file is provided' do
+      command = described_class.new
+      allow(command).to receive(:options).and_return({})
+      file = Tempfile.new('trace-output')
+      allow(command).to receive(:parent_options).and_return({ format: 'json', output: file.path, verbose: false })
+
+      command.get('123')
+      written = File.read(file.path)
+      expect(JSON.parse(written)).to eq(trace_data)
+      expect(written).not_to include("\n  ")
+    ensure
+      file&.close!
     end
   end
 
