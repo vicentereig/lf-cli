@@ -29,7 +29,7 @@ module Langfuse
             --from, --to: Time range (ISO 8601 or relative like "1 hour ago")
 
           OUTPUT OPTIONS:
-            Global options: --format [table|json|csv|markdown], --output FILE
+            Global options: --format [json|table|csv], --output FILE
 
           EXAMPLES:
 
@@ -66,11 +66,10 @@ module Langfuse
           raise_cli_error("Error: #{e.message}")
         end
 
-        desc 'get TRACE_ID', 'Get a specific trace'
-        option :with_observations, type: :boolean, default: false, desc: 'Include all observations'
+        desc 'get TRACE_ID', 'Get a specific trace with observations'
         def get(trace_id)
           trace = client.get_trace(trace_id)
-          output_result(trace)
+          output_result(ensure_observations(trace))
         rescue Client::NotFoundError => _e
           raise_cli_error("Trace not found - #{trace_id}")
         rescue Client::APIError => e
@@ -116,7 +115,7 @@ module Langfuse
         end
 
         def output_result(data)
-          format_type = parent_options[:format] || 'table'
+          format_type = parent_options[:format] || 'json'
 
           if parent_options[:output]
             write_output(parent_options[:output], data, format_type)
@@ -126,16 +125,13 @@ module Langfuse
           end
         end
 
-        def format_output(data, format_type: 'table')
+        def format_output(data, format_type: 'json')
           case format_type
           when 'json'
             JSON.pretty_generate(data)
           when 'csv'
             require_relative '../formatters/csv_formatter'
             Formatters::CSVFormatter.format(data)
-          when 'markdown'
-            require_relative '../formatters/markdown_formatter'
-            Formatters::MarkdownFormatter.format(data)
           else # table
             require_relative '../formatters/table_formatter'
             Formatters::TableFormatter.format(data)
@@ -148,6 +144,12 @@ module Langfuse
           else
             File.write(path, format_output(data, format_type: format_type))
           end
+        end
+
+        def ensure_observations(trace)
+          return trace unless trace.is_a?(Hash)
+
+          trace.merge('observations' => trace['observations'] || [])
         end
 
         def parent_options

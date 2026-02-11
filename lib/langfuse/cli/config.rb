@@ -10,7 +10,7 @@ module Langfuse
       attr_accessor :public_key, :secret_key, :host, :profile, :output_format, :page_limit
 
       DEFAULT_HOST = 'https://cloud.langfuse.com'
-      DEFAULT_OUTPUT_FORMAT = 'table'
+      DEFAULT_OUTPUT_FORMAT = 'json'
       DEFAULT_PAGE_LIMIT = 50
       CONFIG_DIR = File.expand_path('~/.langfuse')
       CONFIG_FILE = File.join(CONFIG_DIR, 'config.yml')

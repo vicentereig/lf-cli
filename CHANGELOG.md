@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Creating/updating scores via CLI
 - Integration with other observability tools
 
+## [1.0.2] - 2026-02-11
+
+### Changed
+- `json` is now the default output format for all commands.
+- Removed `markdown` as a supported output format.
+- `lf traces get` now always returns an `observations` field in output.
+
+### Removed
+- Removed `--with-observations` / `--no-with-observations` from `lf traces get`.
+
 ## [1.0.1] - 2026-02-10
 
 ### Added

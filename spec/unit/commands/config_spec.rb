@@ -177,7 +177,7 @@ RSpec.describe Langfuse::CLI::Commands::ConfigCommand do
       allow(mock_config).to receive(:public_key).and_return('pk_xxx')
       allow(mock_config).to receive(:secret_key).and_return('sk_xxx')
       allow(mock_config).to receive(:host).and_return('https://cloud.langfuse.com')
-      allow(mock_config).to receive(:output_format).and_return('table')
+      allow(mock_config).to receive(:output_format).and_return('json')
       allow(mock_config).to receive(:page_limit).and_return(50)
 
       output = capture_stdout { command.show('default') }

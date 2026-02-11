@@ -146,7 +146,7 @@ module Langfuse
         end
 
         def output_result(data)
-          format_type = parent_options[:format] || 'table'
+          format_type = parent_options[:format] || 'json'
 
           if parent_options[:output]
             write_output(parent_options[:output], data, format_type)
@@ -156,16 +156,13 @@ module Langfuse
           end
         end
 
-        def format_output(data, format_type: 'table')
+        def format_output(data, format_type: 'json')
           case format_type
           when 'json'
             JSON.pretty_generate(data)
           when 'csv'
             require_relative '../formatters/csv_formatter'
             Formatters::CSVFormatter.format(data)
-          when 'markdown'
-            require_relative '../formatters/markdown_formatter'
-            Formatters::MarkdownFormatter.format(data)
           else # table
             require_relative '../formatters/table_formatter'
             Formatters::TableFormatter.format(data)

@@ -117,6 +117,19 @@ RSpec.describe Langfuse::CLI::Commands::Traces do
     ensure
       file&.close!
     end
+
+    it 'always includes observations in trace output' do
+      command = described_class.new
+      allow(command).to receive(:options).and_return({})
+      allow(command).to receive(:parent_options).and_return({ format: 'json' })
+      allow(client).to receive(:get_trace).and_return({
+        'id' => '123',
+        'name' => 'trace_without_observations'
+      })
+
+      parsed = JSON.parse(capture_stdout { command.get('123') })
+      expect(parsed['observations']).to eq([])
+    end
   end
 
   describe 'error handling' do

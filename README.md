@@ -21,7 +21,7 @@ This project is not affiliated with, endorsed by, or sponsored by Langfuse GmbH.
 - 🎯 **Inspect Observations** - List LLM generations, spans, and events
 - 📈 **Query Metrics** - Run analytics queries with custom aggregations and dimensions
 - ⭐ **View Scores** - Access quality scores and evaluation metrics
-- 🎨 **Multiple Output Formats** - Table, JSON, CSV, or Markdown
+- 🎨 **Multiple Output Formats** - JSON, Table, or CSV
 - 🔐 **Multi-Profile Support** - Manage credentials for dev, staging, and production
 - 🌐 **Interactive Setup** - Browser-integrated credential configuration
 - ⚡ **Type-Safe** - Built with Sorbet Runtime for reliability
@@ -191,7 +191,7 @@ lf metrics query \
 All commands support these global options:
 
 ```bash
--f, --format [table|json|csv|markdown]   # Output format (default: table)
+-f, --format [json|table|csv]            # Output format (default: json)
 -o, --output FILE                        # Save output to file
 -l, --limit N                            # Limit number of results
 -P, --profile PROFILE                    # Use specific profile
@@ -216,21 +216,21 @@ Supports both ISO 8601 and natural language:
 
 ## Output Formats
 
-### Table (Default)
+### JSON (Default)
+
+```bash
+lf traces list --format json
+```
+
+Perfect for piping to `jq` or other tools.
+
+### Table
 
 ```bash
 lf traces list --format table
 ```
 
 Outputs a formatted ASCII table - great for terminal viewing.
-
-### JSON
-
-```bash
-lf traces list --format json
-```
-
-Perfect for piping to `jq` or other tools:
 
 ```bash
 lf traces list --format json | jq '.[] | select(.name == "chat")'
@@ -244,14 +244,6 @@ lf traces list --format csv --output data.csv
 
 Import into spreadsheets or data analysis tools.
 
-### Markdown
-
-```bash
-lf traces list --format markdown
-```
-
-Great for documentation and reports.
-
 ## Configuration
 
 ### Configuration File
@@ -264,7 +256,7 @@ profiles:
     host: https://cloud.langfuse.com
     public_key: pk_...
     secret_key: sk_...
-    output_format: table
+    output_format: json
     page_limit: 50
 
   production:
@@ -337,7 +329,7 @@ This section mirrors the depth of a `llms-full.txt` so AI assistants can answer 
 | `-P, --profile PROFILE` | Selects a saved profile. | Defaults to `default`. |
 | `--public-key KEY` / `--secret-key KEY` | Inject credentials without touching config files. | Highest priority source. |
 | `--host URL` | Override Langfuse host. | Combine with `--profile` to temporarily test another region. |
-| `-f, --format FORMAT` | `table` (default), `json`, `csv`, `markdown`. | Applies to every command; CSV/Markdown require structured arrays. |
+| `-f, --format FORMAT` | `json` (default), `table`, `csv`. | Applies to every command. |
 | `-o, --output PATH` | Write output to a file. | Respects format; prints “Output written…” when `--verbose`. |
 | `-l, --limit N` | Caps number of records pulled per command. | Pagination helper, defaults to API `limit` (50) when omitted. |
 | `-p, --page N` | Start from an explicit page. | Useful when you know an offset. |
@@ -350,9 +342,8 @@ Pagination strategy: the client keeps fetching pages until it collects the reque
 ### Output & Files
 
 - `table` renders ASCII tables via `Formatters::TableFormatter` and truncates oversized cells for terminal safety.
-- `json` prints pretty JSON to stdout for direct piping to `jq`.
-- `csv` and `markdown` use dedicated formatters and require array-like data (single hashes are wrapped automatically).
-- `markdown` escapes pipes, normalizes newlines to `<br>`, and truncates oversized cells.
+- `json` is the default output and prints pretty JSON to stdout for direct piping to `jq`.
+- `csv` uses a dedicated formatter and requires array-like data (single hashes are wrapped automatically).
 - `--output` writes to a file; JSON output is written in compact form to reduce memory pressure on large payloads.
 - Use `lf ... --format json | jq ...` for automation recipes.
 
@@ -374,7 +365,7 @@ Each command inherits the global flags above. API errors exit with status code `
 | Subcommand | Purpose |
 | --- | --- |
 | `lf traces list` | Lists traces with filters/pagination. |
-| `lf traces get TRACE_ID [--with-observations]` | Fetches a single trace. The `--with-observations` flag is accepted for forward compatibility but currently behaves the same as the default API payload. |
+| `lf traces get TRACE_ID` | Fetches a single trace with `observations` included. |
 
 `traces list` options:
 
@@ -522,7 +513,6 @@ lib/langfuse/cli/
 ├── formatters/         # Output formatters
 │   ├── table_formatter.rb
 │   ├── csv_formatter.rb
-│   └── markdown_formatter.rb
 └── commands/           # Command modules
     ├── traces.rb
     ├── sessions.rb

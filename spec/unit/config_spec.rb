@@ -28,7 +28,7 @@ RSpec.describe Langfuse::CLI::Config do
         config = described_class.new
 
         expect(config.host).to eq('https://cloud.langfuse.com')
-        expect(config.output_format).to eq('table')
+        expect(config.output_format).to eq('json')
         expect(config.page_limit).to eq(50)
         expect(config.public_key).to be_nil
         expect(config.secret_key).to be_nil
@@ -314,7 +314,7 @@ RSpec.describe Langfuse::CLI::Config do
       expect(hash[:secret_key]).to eq('test_secret')
       expect(hash[:host]).to eq('https://test.langfuse.com')
       expect(hash[:profile]).to eq('default')
-      expect(hash[:output_format]).to eq('table')
+      expect(hash[:output_format]).to eq('json')
       expect(hash[:page_limit]).to eq(50)
     end
   end

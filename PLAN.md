@@ -132,7 +132,6 @@ langfuse traces list [OPTIONS]
 
 # Get specific trace with all observations
 langfuse traces get TRACE_ID [OPTIONS]
-  --with-observations       # Include all observations
   --format FORMAT
 
 # Search traces with complex filters
@@ -677,7 +676,7 @@ langfuse traces list \
   | grep -i "error"
 
 # Get detailed trace with all observations
-langfuse traces get abc123-def456-789 --format json --with-observations | jq
+langfuse traces get abc123-def456-789 --format json | jq
 ```
 
 ### Scenario 2: Monitor Agent Performance

@@ -28,8 +28,8 @@ module Langfuse
       class_option :format,
                    type: :string,
                    aliases: '-f',
-                   enum: %w[table json csv markdown],
-                   default: 'table',
+                   enum: %w[json table csv],
+                   default: 'json',
                    desc: 'Output format'
       class_option :output,
                    type: :string,
@@ -111,7 +111,7 @@ module Langfuse
       end
 
       def output_result(data)
-        format_type = options[:format] || 'table'
+        format_type = options[:format] || 'json'
 
         if options[:output]
           write_output(options[:output], data, format_type)
@@ -121,7 +121,7 @@ module Langfuse
         end
       end
 
-      def format_output(data, format_type: 'table')
+      def format_output(data, format_type: 'json')
         case format_type
         when 'json'
           JSON.pretty_generate(data)
@@ -129,9 +129,6 @@ module Langfuse
           # CSV formatting will be implemented in formatters
           require_relative 'cli/formatters/csv_formatter'
           Formatters::CSVFormatter.format(data)
-        when 'markdown'
-          require_relative 'cli/formatters/markdown_formatter'
-          Formatters::MarkdownFormatter.format(data)
         else # table
           require_relative 'cli/formatters/table_formatter'
           Formatters::TableFormatter.format(data)

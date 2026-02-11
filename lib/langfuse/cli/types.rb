@@ -66,7 +66,6 @@ module Langfuse
           Table = new('table')
           JSON = new('json')
           CSV = new('csv')
-          Markdown = new('markdown')
         end
       end
 
